@@ -13,10 +13,10 @@ Produced against `AI-QA-System-Design-Phase-Prompt.md`.
 | Database | Dedicated Postgres/Supabase project (not shared with Bug Tracker). |
 | Auth | Own Supabase Auth, independent of the Bug Tracker's login. |
 | LLM provider | Anthropic Claude API, behind a provider-agnostic `AIService` interface. |
-| Version control | Separate GitHub account/repo: [github.com/Lathish0109/QA_worker](https://github.com/Lathish0109/QA_worker). |
+| Version control | Separate GitHub account/repo: [github.com/Lathish0109/QA_pipeX](https://github.com/Lathish0109/QA_pipeX) (renamed from QA_worker; project itself renamed Obsidian QA Engine -> QAPipeX). |
 | Playwright execution | Dedicated Node/TypeScript worker service, containerized with Docker (default choice — see §6 for why, and the alternatives if you'd rather not run your own container). |
 
-**Open item I could not decide for you:** the Bug Tracker's real `POST /api/bugs` contract (exact fields + auth method). Section 4 below specifies an assumed payload shape. Everything is built so swapping the real contract in later is a one-file change (`packages/bug-tracker-client`) — nothing else in the app needs to know it changed.
+**UPDATE 2026-09-27 — resolved:** the Bug Tracker turned out to be the same live app (ErrorZero) already used for Playwright execution testing, and it exposes its own real contract via a self-service "Automation API" settings page. `packages/bug-tracker-client` now implements that real contract (`POST /api/v1/bugs`, Bearer auth, real field names) and it's verified — real bugs created through our client code appear correctly in ICore's dashboard. Section 4 below (and the payload shape in §7) still describe the original *assumed* shape from the design phase; see README.md's "Current status" for what's actually implemented now.
 
 **Also open, not a design blocker:** at least one real target test website + how its login credentials get entered. The schema (§3) already has a place for this (`project_credentials`, encrypted, never sent to the LLM) — you can fill it in whenever you have a real site to point at.
 

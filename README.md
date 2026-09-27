@@ -71,14 +71,23 @@ screenshot when the AI's guessed selector didn't match the real page, and produc
 AI failure analysis that correctly separated confirmed evidence from an explicitly-labeled
 hypothesis. That is the core value proposition of this whole system, proven working.
 
-Two things remain genuinely open, both account-side, not code:
+One thing remains genuinely open, and it's account-side, not code:
 - **Claude (Anthropic)**: the account's API credit balance is $0 — Claude Pro (the chat
   subscription) and API billing are separate products with separate balances. Add credits
   at console.anthropic.com → Plans & Billing to use it (the code side — including a
   workspace-ID header some Console setups require — is already fixed and confirmed working
   up to the billing wall).
-- **ICore Bug Tracker sync**: `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` are still unset
-  pending the real API contract.
+
+**ICore Bug Tracker sync is now real, not assumed.** ErrorZero Bug Tracker *is* ICore — the
+same live site used for Playwright execution testing turned out to also be the target Bug
+Tracker. It has its own self-service "Automation API" page (Settings → Automation API) with
+full documentation of its real contract, so the integration was built against the actual
+API, not a guess: `POST /api/v1/bugs`, `Authorization: Bearer <key>`, fields
+`title`/`steps_to_reproduce`/`severity`/`priority`/`expected_result`/`actual_result`/`additional_context`,
+201 response `{ id, displayId }`. `packages/bug-tracker-client` was rewritten to match this
+exactly (including mapping our internal severity/priority scales to ICore's), and verified
+by generating a real API key on that site and creating real bugs through our own client
+code — they show up correctly in ICore's dashboard, tagged `Source: Automation`.
 
 - ✅ Monorepo scaffold, Supabase Auth, DB schema + a private `evidence` Storage bucket
   (applied and verified live, RLS on every table, zero open security advisories)
@@ -99,9 +108,9 @@ Two things remain genuinely open, both account-side, not code:
   from `rootCauseHypothesis`, which is never asserted as fact.
 - ✅ Bug Tracker: `generateBugReport()` drafts a bug from the failure analysis; the app
   fills in the structural fields (evidence links, source refs — never AI-generated) and
-  sends it via `BugTrackerClient`. Not yet synced to a real ICore instance since
-  `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` are unset — verified instead via the
-  client's own clear "not configured" error.
+  sends it via `BugTrackerClient` to the real ICore API. **Verified with real bugs created**
+  in ICore's live dashboard through our own client code, confirming the field mapping,
+  auth, and response parsing all work correctly end-to-end.
 - ✅ Settings: pick which AI provider is active — Claude (Anthropic), ChatGPT (OpenAI), or
   Gemini (Google) — workspace-wide, persisted in `app_settings`. All three implement the
   same `AIService` interface (`packages/ai-service`), including image input for failure
@@ -126,20 +135,32 @@ Two things remain genuinely open, both account-side, not code:
 **To use real AI output yourself:** set at least one of `ANTHROPIC_API_KEY` /
 `OPENAI_API_KEY` / `GEMINI_API_KEY` in `apps/web/.env.local`, then select it on the
 Settings page if it isn't Gemini (the currently active one — see above for why Claude
-needs API billing credits separately from a Pro subscription). Bug Tracker sync
-additionally needs `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` once you have ICore's real
-API contract.
+needs API billing credits separately from a Pro subscription). Bug Tracker sync is already
+configured against the real ICore instance (`BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` are
+set) — nothing else to do there.
 
 ### Known transient issues
 
 - Supabase's built-in email sender has a low default rate limit (a few emails/hour), which
   signup testing during setup already tripped. It clears on its own — if signup returns
   `over_email_send_rate_limit`, wait ~15-30 min and retry. Unrelated to the app code.
-- Google's Gemini API occasionally returns a transient `503 (high demand, try again later)`
-  — this happened once during verification and succeeded immediately on retry. If a
-  generation/analysis call fails with that message, just retry it.
+- Google's Gemini API occasionally returns a transient `503 (high demand, try again later)`.
+  Usually clears within a retry or two, but during one verification session it persisted
+  for several minutes straight — this is entirely on Google's side; if it's happening, wait
+  a bit and use the "Analyze Failure with AI" retry button once it clears, or switch to a
+  different provider in Settings in the meantime.
+- The ICore Bug Tracker's Automation API key is shown in full exactly once, at creation —
+  if extracting it from rendered page text (rather than reading it from an input's `.value`
+  or the network response), watch for adjacent UI text (e.g. an "I've copied it" button)
+  getting concatenated onto the end with no separator. Cut the string precisely at the next
+  known label, or read the create-key network response body directly instead of scraping
+  rendered text.
 - If a target site sits behind Vercel's Deployment Protection, every visitor (including
   this app's worker) gets redirected to `vercel.com/login` instead of the real page — this
   is a per-project Vercel setting (Settings → Deployment Protection), not something this
   app can detect or bypass on its own. Disable it (or set "Only Preview Deployments") for
   any Vercel-hosted site you want to actually test.
+- **Minor housekeeping left in ICore itself:** while generating/testing the Automation API
+  key, one extra unused key ("QAPipeX Automation," created before the final "QAPipeX
+  Final") was left in an Active state on ICore's Settings → Automation API page — harmless
+  (nobody has its value), but worth revoking there if you want a tidy key list.
