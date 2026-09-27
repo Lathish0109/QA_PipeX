@@ -1,5 +1,5 @@
 {
-  "name": "@obsidian/web",
+  "name": "@qapipex/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,10 +12,10 @@
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "@obsidian/shared-types": "*",
-    "@obsidian/db": "*",
-    "@obsidian/ai-service": "*",
-    "@obsidian/bug-tracker-client": "*",
+    "@qapipex/shared-types": "*",
+    "@qapipex/db": "*",
+    "@qapipex/ai-service": "*",
+    "@qapipex/bug-tracker-client": "*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0"
   },

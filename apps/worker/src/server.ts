@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import type { WorkerRunRequest } from '@obsidian/shared-types';
+import type { WorkerRunRequest } from '@qapipex/shared-types';
 import { runTestSuite } from './runner.js';
 
 const PORT = Number(process.env.PORT ?? 4088);
@@ -73,5 +73,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Obsidian worker listening on http://localhost:${PORT}`);
+  console.log(`QAPipeX worker listening on http://localhost:${PORT}`);
 });

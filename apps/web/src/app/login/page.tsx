@@ -48,12 +48,12 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8">
         <div className="mb-6 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-accent/10 font-mono text-sm font-bold text-accent">
-            O
+            Q
           </div>
           <div>
-            <div className="text-sm font-semibold tracking-wide">Obsidian</div>
+            <div className="text-sm font-semibold tracking-wide">QAPipeX</div>
             <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
-              QA Engine
+              AI QA Pipeline
             </div>
           </div>
         </div>

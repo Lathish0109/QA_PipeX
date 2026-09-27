@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getActiveAIService, getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@obsidian/ai-service';
-import type { Json } from '@obsidian/db';
+import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@qapipex/ai-service';
+import type { Json } from '@qapipex/db';
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

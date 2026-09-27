@@ -1,4 +1,4 @@
-import { createServiceClient, decryptSecret } from '@obsidian/db';
+import { createServiceClient, decryptSecret } from '@qapipex/db';
 
 /** Fetches and decrypts a project's stored login credential by its label. */
 export async function getCredential(

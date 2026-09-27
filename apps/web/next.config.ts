@@ -2,10 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: [
-    "@obsidian/shared-types",
-    "@obsidian/db",
-    "@obsidian/ai-service",
-    "@obsidian/bug-tracker-client",
+    "@qapipex/shared-types",
+    "@qapipex/db",
+    "@qapipex/ai-service",
+    "@qapipex/bug-tracker-client",
   ],
 };
 

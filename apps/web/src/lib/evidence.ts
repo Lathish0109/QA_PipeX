@@ -1,4 +1,4 @@
-import { createServiceClient } from '@obsidian/db';
+import { createServiceClient } from '@qapipex/db';
 
 /** Evidence lives in a private bucket; generate a short-lived signed URL to display it. */
 export async function signEvidenceUrl(path: string | null): Promise<string | null> {

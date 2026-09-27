@@ -1,4 +1,4 @@
-# Obsidian QA Engine
+# QAPipeX
 
 AI-powered QA platform: requirement → AI-generated test cases → human review/approval →
 Playwright execution → evidence capture → AI failure analysis → structured bug → ICore Bug Tracker.

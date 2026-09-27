@@ -3,7 +3,7 @@ import type {
   FailureAnalysis,
   TestCase,
   TestResult,
-} from '@obsidian/shared-types';
+} from '@qapipex/shared-types';
 
 export interface GeneratedTestCase {
   title: string;

@@ -1,4 +1,4 @@
-import type { BugPayload } from '@obsidian/shared-types';
+import type { BugPayload } from '@qapipex/shared-types';
 
 export interface CreatedBug {
   id: string;

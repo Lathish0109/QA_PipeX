@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@obsidian/db';
-import { createAIService, type AIProvider, type AIService } from '@obsidian/ai-service';
+import type { Database } from '@qapipex/db';
+import { createAIService, type AIProvider, type AIService } from '@qapipex/ai-service';
 
 const DEFAULT_PROVIDER: AIProvider = 'anthropic';
 

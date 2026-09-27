@@ -7,7 +7,7 @@ import type {
   GeneratedBugContent,
   GeneratedTestCase,
 } from './types';
-import type { FailureAnalysis } from '@obsidian/shared-types';
+import type { FailureAnalysis } from '@qapipex/shared-types';
 import {
   ANALYZE_FAILURE_SCHEMA,
   ANALYZE_FAILURE_SYSTEM_PROMPT,

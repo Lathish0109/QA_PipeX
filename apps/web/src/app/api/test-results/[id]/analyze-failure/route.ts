@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runFailureAnalysis, syncBugForAnalysis } from '@/lib/pipeline';
 import { getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@obsidian/ai-service';
+import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@qapipex/ai-service';
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runFailureAnalysis, syncBugForAnalysis } from '@/lib/pipeline';
-import type { WorkerRunRequest, WorkerRunResponse } from '@obsidian/shared-types';
+import type { WorkerRunRequest, WorkerRunResponse } from '@qapipex/shared-types';
 
 export async function GET() {
   const supabase = await createClient();

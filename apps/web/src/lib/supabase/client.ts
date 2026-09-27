@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import type { Database } from '@obsidian/db';
+import type { Database } from '@qapipex/db';
 
 export function createClient() {
   return createBrowserClient<Database>(

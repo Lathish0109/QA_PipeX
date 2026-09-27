@@ -22,12 +22,12 @@ export function Sidebar() {
     <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-surface">
       <div className="flex items-center gap-2 border-b border-border px-5 py-4">
         <div className="flex h-8 w-8 items-center justify-center rounded bg-accent/10 font-mono text-sm font-bold text-accent">
-          O
+          Q
         </div>
         <div>
-          <div className="text-sm font-semibold tracking-wide">Obsidian</div>
+          <div className="text-sm font-semibold tracking-wide">QAPipeX</div>
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
-            QA Engine
+            AI QA Pipeline
           </div>
         </div>
       </div>

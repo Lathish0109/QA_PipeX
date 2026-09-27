@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Database } from '@obsidian/db';
-import type { TestStep } from '@obsidian/shared-types';
+import type { Database } from '@qapipex/db';
+import type { TestStep } from '@qapipex/shared-types';
 
 type TestCaseRow = Database['public']['Tables']['test_cases']['Row'];
 

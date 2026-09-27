@@ -1,8 +1,8 @@
 {
-  "name": "@obsidian/worker",
+  "name": "@qapipex/worker",
   "version": "0.1.0",
   "private": true,
-  "description": "Playwright execution worker for Obsidian QA Engine.",
+  "description": "Playwright execution worker for QAPipeX.",
   "scripts": {
     "dev": "tsx watch --env-file=.env.local src/server.ts",
     "start": "tsx --env-file=.env.local src/server.ts"
@@ -10,8 +10,8 @@
   "dependencies": {
     "playwright": "^1.48.0",
     "@supabase/supabase-js": "^2.116.0",
-    "@obsidian/shared-types": "*",
-    "@obsidian/db": "*"
+    "@qapipex/shared-types": "*",
+    "@qapipex/db": "*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

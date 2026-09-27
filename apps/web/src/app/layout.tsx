@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Obsidian QA Engine",
+  title: "QAPipeX",
   description: "AI-powered QA platform: requirement to test cases to execution to bug report.",
 };
 

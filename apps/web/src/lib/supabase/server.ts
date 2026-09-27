@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { Database } from '@obsidian/db';
+import type { Database } from '@qapipex/db';
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 

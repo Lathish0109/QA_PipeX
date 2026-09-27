@@ -7,7 +7,7 @@ import {
   AI_PROVIDER_ENV_VAR,
   AI_PROVIDER_LABELS,
   type AIProvider,
-} from '@obsidian/ai-service';
+} from '@qapipex/ai-service';
 
 export function ProviderPicker({
   active,

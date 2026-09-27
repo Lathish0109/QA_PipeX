@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@obsidian/db';
-import { BugTrackerClient } from '@obsidian/bug-tracker-client';
-import type { TestCase, TestStep } from '@obsidian/shared-types';
+import type { Database } from '@qapipex/db';
+import { BugTrackerClient } from '@qapipex/bug-tracker-client';
+import type { TestCase, TestStep } from '@qapipex/shared-types';
 import { signEvidenceUrl } from './evidence';
 import { getActiveAIService } from './ai-provider';
 

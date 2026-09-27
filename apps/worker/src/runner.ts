@@ -2,7 +2,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { TestStep, WorkerRunRequest, WorkerRunResponse, WorkerTestCaseResult } from '@obsidian/shared-types';
+import type { TestStep, WorkerRunRequest, WorkerRunResponse, WorkerTestCaseResult } from '@qapipex/shared-types';
 import { uploadEvidence } from './supabase.js';
 import { getCredential } from './credentials.js';
 

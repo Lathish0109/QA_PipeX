@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDERS, isProviderConfigured, type AIProvider } from '@obsidian/ai-service';
+import { AI_PROVIDERS, isProviderConfigured, type AIProvider } from '@qapipex/ai-service';
 
 export async function GET() {
   const supabase = await createClient();

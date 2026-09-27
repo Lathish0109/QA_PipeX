@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDERS, isProviderConfigured, type AIProvider } from '@obsidian/ai-service';
+import { AI_PROVIDERS, isProviderConfigured, type AIProvider } from '@qapipex/ai-service';
 import { ProviderPicker } from './provider-picker';
 
 export default async function SettingsPage() {

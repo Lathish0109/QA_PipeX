@@ -1,4 +1,4 @@
-import type { FailureAnalysis } from '@obsidian/shared-types';
+import type { FailureAnalysis } from '@qapipex/shared-types';
 import type { GeneratedBugContent, GeneratedTestCase } from './types';
 
 export const TEST_CASE_TYPES = ['positive', 'negative', 'edge', 'validation'] as const;
