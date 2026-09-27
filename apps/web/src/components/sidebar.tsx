@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/reports', label: 'Reports' },
   { href: '/test-history', label: 'Test History' },
   { href: '/settings', label: 'Settings' },
+  { href: '/documentation', label: 'Documentation' },
 ];
 
 export function Sidebar() {
