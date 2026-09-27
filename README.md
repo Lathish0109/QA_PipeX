@@ -97,6 +97,13 @@ code — they show up correctly in ICore's dashboard, tagged `Source: Automation
 - ✅ AI Test Generator: generate → review/edit → approve/reject, persisted to `test_cases`,
   plus a global work-queue view ranked by what needs attention
 - ✅ Test Suites & Cases: global filterable list (all/pending/approved/rejected)
+- ✅ Test History: every test run ever executed, across every project, filterable by
+  project and outcome — the full archive, distinct from Test Runs (which is for
+  triggering + monitoring)
+- ✅ Reports: aggregate analytics across all projects — overall/per-project pass rates,
+  failure severity distribution, and top failure categories (all real queries, no
+  fabricated numbers; sparse data shows honestly, e.g. a 0% pass rate when every stored
+  result genuinely failed)
 - ✅ Test Runs: triggering a run executes every approved test case for a project through
   real Playwright (`apps/worker`, synchronous for V1 — see the code comment on why).
   On failure it captures a screenshot, trace, and console logs to Supabase Storage and

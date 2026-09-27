@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { href: '/test-runs', label: 'Test Runs' },
   { href: '/failure-analyzer', label: 'Failure Analyzer' },
   { href: '/bug-tracker', label: 'Bug Tracker' },
+  { href: '/reports', label: 'Reports' },
+  { href: '/test-history', label: 'Test History' },
   { href: '/settings', label: 'Settings' },
 ];
 
