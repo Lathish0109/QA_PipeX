@@ -136,3 +136,23 @@ export interface WorkerRunResponse {
   runStatus: TestRunStatus;
   results: WorkerTestCaseResult[];
 }
+
+/** Request body apps/web sends to the worker's POST /snapshot endpoint. */
+export interface WorkerSnapshotRequest {
+  baseUrl: string;
+}
+
+/** One interactive element found on the page, with a best-effort selector the AI can reference directly. */
+export interface PageElementSnapshot {
+  tag: string;
+  type?: string;
+  selector: string;
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  text?: string;
+}
+
+export interface WorkerSnapshotResponse {
+  elements: PageElementSnapshot[];
+}

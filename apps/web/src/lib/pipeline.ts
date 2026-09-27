@@ -108,9 +108,53 @@ export async function runFailureAnalysis(
 }
 
 /**
+ * Looks up whether this test case already has a bug filed for it, from any
+ * previous failure. ICore's Automation API has no way to check whether a bug
+ * is still open (it's create-only, see BugTrackerClient's doc comment) — so
+ * "already has a bug" here means "ever had one filed", not "has an open one".
+ * That's a deliberate trade-off: re-filing a duplicate on every recurrence of
+ * a known issue is worse (ICore's own docs warn against exactly this — a
+ * blanket per-failure report floods the tracker with noise) than occasionally
+ * staying silent on a bug that was fixed and then genuinely regressed.
+ */
+async function findExistingBugForTestCase(
+  supabase: SupabaseClient<Database>,
+  testCaseId: string,
+): Promise<Database['public']['Tables']['bug_references']['Row'] | null> {
+  const { data: priorResults } = await supabase
+    .from('test_results')
+    .select('id')
+    .eq('test_case_id', testCaseId);
+  const resultIds = (priorResults ?? []).map((r) => r.id);
+  if (resultIds.length === 0) return null;
+
+  const { data: priorAnalyses } = await supabase
+    .from('failure_analyses')
+    .select('id')
+    .in('test_result_id', resultIds);
+  const analysisIds = (priorAnalyses ?? []).map((a) => a.id);
+  if (analysisIds.length === 0) return null;
+
+  const { data: existingBug } = await supabase
+    .from('bug_references')
+    .select('*')
+    .in('failure_analysis_id', analysisIds)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return existingBug ?? null;
+}
+
+/**
  * Generates a bug report from a failure analysis and sends it to the ICore
  * Bug Tracker. Best-effort like runFailureAnalysis — returns null rather
  * than throwing when the AI service or Bug Tracker credentials aren't set.
+ *
+ * De-duplicates against ICore: if this test case already has a bug filed
+ * from any earlier failure, this links the new failure_analysis to that same
+ * bug instead of drafting and creating another one — see
+ * findExistingBugForTestCase for why.
  */
 export async function syncBugForAnalysis(
   supabase: SupabaseClient<Database>,
@@ -123,6 +167,26 @@ export async function syncBugForAnalysis(
     .eq('id', testResult.test_case_id)
     .single();
   if (!testCaseRow) return null;
+
+  const existingBug = await findExistingBugForTestCase(supabase, testResult.test_case_id);
+  if (existingBug) {
+    const { data: linkedBug, error: linkError } = await supabase
+      .from('bug_references')
+      .insert({
+        failure_analysis_id: analysis.id,
+        external_bug_id: existingBug.external_bug_id,
+        external_bug_url: existingBug.external_bug_url,
+        cached_status: existingBug.cached_status,
+        last_synced_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single();
+    if (linkError) {
+      console.error('Failed to link recurrence to existing bug:', linkError.message);
+      return null;
+    }
+    return linkedBug;
+  }
 
   let aiService;
   try {

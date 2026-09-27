@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { reconcileStaleRuns } from '@/lib/reconcile';
 
 const STATUS_STYLES: Record<string, string> = {
   queued: 'text-muted border-border',
@@ -12,6 +13,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+  await reconcileStaleRuns(supabase);
 
   const [
     { count: projectCount },

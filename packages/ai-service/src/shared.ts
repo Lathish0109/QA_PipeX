@@ -1,4 +1,4 @@
-import type { FailureAnalysis } from '@qapipex/shared-types';
+import type { FailureAnalysis, PageElementSnapshot } from '@qapipex/shared-types';
 import type { GeneratedBugContent, GeneratedTestCase } from './types';
 
 export const TEST_CASE_TYPES = ['positive', 'negative', 'edge', 'validation'] as const;
@@ -14,7 +14,10 @@ export const GENERATE_TEST_CASES_SYSTEM_PROMPT =
   'you may emit a step with action "login" and target set to that exact credential label (e.g. ' +
   '{"action":"login","target":"Primary test account"}) as the step that establishes the session — never invent ' +
   'a username or password, and never put one in any step\'s target or value. ' +
-  'Never include real credentials or secrets in any step.';
+  'Never include real credentials or secrets in any step. ' +
+  'If a snapshot of real elements on the target page is provided, every non-"login" step\'s "target" must be ' +
+  'one of those exact selectors — never invent a selector that guesses at markup you have not been shown. ' +
+  'If no element in the snapshot fits an action the requirement calls for, omit that step rather than guessing.';
 
 export const ANALYZE_FAILURE_SYSTEM_PROMPT =
   'You are a QA failure analyst. You must strictly separate what the evidence confirms from what you are ' +
@@ -131,16 +134,26 @@ export type GenerateTestCasesToolOutput = { testCases: GeneratedTestCase[] };
 export type AnalyzeFailureToolOutput = Omit<FailureAnalysis, 'id' | 'testResultId' | 'createdAt'>;
 export type GenerateBugReportToolOutput = GeneratedBugContent;
 
+function describeSnapshotElement(el: PageElementSnapshot): string {
+  const parts = [el.tag, el.type ? `type=${el.type}` : '', el.text ? `text="${el.text}"` : ''].filter(Boolean);
+  return `${el.selector} (${parts.join(', ')})`;
+}
+
 export function buildTestCasesUserPrompt(input: {
   baseUrl: string;
   requirementText: string;
   availableCredentialLabels?: string[];
+  pageSnapshot?: PageElementSnapshot[];
 }): string {
   const credentialsLine =
     input.availableCredentialLabels && input.availableCredentialLabels.length > 0
       ? `\n\nAvailable credential labels for a "login" step (use the exact label, never the underlying username/password): ${input.availableCredentialLabels.join(', ')}`
       : '';
-  return `Target site: ${input.baseUrl}\n\nRequirement:\n${input.requirementText}${credentialsLine}`;
+  const snapshotLine =
+    input.pageSnapshot && input.pageSnapshot.length > 0
+      ? `\n\nReal interactive elements found on ${input.baseUrl} (use these exact selectors as step targets, do not invent others):\n${input.pageSnapshot.map(describeSnapshotElement).join('\n')}`
+      : '';
+  return `Target site: ${input.baseUrl}\n\nRequirement:\n${input.requirementText}${credentialsLine}${snapshotLine}`;
 }
 
 export function buildFailureAnalysisTextContext(input: {

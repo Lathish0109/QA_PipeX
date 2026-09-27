@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
-import type { WorkerRunRequest } from '@qapipex/shared-types';
-import { runTestSuite } from './runner.js';
+import type { WorkerRunRequest, WorkerSnapshotRequest } from '@qapipex/shared-types';
+import { capturePageSnapshot, runTestSuite } from './runner.js';
 
 const PORT = Number(process.env.PORT ?? 4088);
 const SHARED_SECRET = process.env.WORKER_SHARED_SECRET;
@@ -20,6 +20,11 @@ function isValidRequest(body: unknown): body is WorkerRunRequest {
   );
 }
 
+function isValidSnapshotRequest(body: unknown): body is WorkerSnapshotRequest {
+  if (!body || typeof body !== 'object') return false;
+  return typeof (body as Record<string, unknown>).baseUrl === 'string';
+}
+
 const server = createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -27,7 +32,7 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (req.method !== 'POST' || req.url !== '/run') {
+  if (req.method !== 'POST' || (req.url !== '/run' && req.url !== '/snapshot')) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
     return;
@@ -48,6 +53,28 @@ const server = createServer(async (req, res) => {
   } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+    return;
+  }
+
+  if (req.url === '/snapshot') {
+    if (!isValidSnapshotRequest(body)) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid snapshot request shape' }));
+      return;
+    }
+    try {
+      const elements = await capturePageSnapshot(body.baseUrl);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ elements }));
+    } catch (err) {
+      console.error('Page snapshot capture crashed:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          error: err instanceof Error ? err.message : 'Unknown snapshot error',
+        }),
+      );
+    }
     return;
   }
 

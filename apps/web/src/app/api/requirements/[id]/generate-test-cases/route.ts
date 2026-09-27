@@ -3,6 +3,32 @@ import { createClient } from '@/lib/supabase/server';
 import { getActiveAIService, getActiveProvider } from '@/lib/ai-provider';
 import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@qapipex/ai-service';
 import type { Json } from '@qapipex/db';
+import type { PageElementSnapshot, WorkerSnapshotResponse } from '@qapipex/shared-types';
+
+/**
+ * Best-effort: grounds generated selectors in the real page, but a requirement
+ * a user hasn't set up a live site for yet (or a worker that's briefly down)
+ * shouldn't block test case generation — it just falls back to guessing.
+ */
+async function tryCapturePageSnapshot(baseUrl: string): Promise<PageElementSnapshot[] | undefined> {
+  const workerUrl = process.env.WORKER_URL;
+  const workerSecret = process.env.WORKER_SHARED_SECRET;
+  if (!workerUrl || !workerSecret) return undefined;
+
+  try {
+    const res = await fetch(`${workerUrl}/snapshot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${workerSecret}` },
+      body: JSON.stringify({ baseUrl }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return undefined;
+    const body = (await res.json()) as WorkerSnapshotResponse;
+    return body.elements;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,6 +76,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     );
   }
   const aiService = await getActiveAIService(supabase);
+  const pageSnapshot = await tryCapturePageSnapshot(project.base_url);
 
   let generated;
   try {
@@ -57,6 +84,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       requirementText: requirement.text,
       baseUrl: project.base_url,
       availableCredentialLabels: (credentials ?? []).map((c) => c.label),
+      pageSnapshot,
     });
   } catch (err) {
     return NextResponse.json(
@@ -67,6 +95,18 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   if (generated.length === 0) {
     return NextResponse.json({ error: 'AI returned no test cases' }, { status: 502 });
+  }
+
+  // Regenerating replaces the previous AI draft rather than piling on top of it.
+  // Cases a human has already approved or rejected are a recorded decision and are kept.
+  const { error: deleteError } = await supabase
+    .from('test_cases')
+    .delete()
+    .eq('requirement_id', id)
+    .eq('status', 'draft');
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
 
   const { data: inserted, error: insertError } = await supabase

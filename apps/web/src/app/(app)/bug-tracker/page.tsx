@@ -25,8 +25,10 @@ export default async function BugTrackerPage() {
         <p className="mt-1 max-w-2xl text-sm text-muted">
           This system never owns bug data — once a failure is analyzed, a structured bug is sent
           to your ICore Bug Tracker via API automatically, and this page shows each synced
-          bug&rsquo;s ID, link, and cached status. Bug status, assignment, and comments stay owned
-          by ICore, not duplicated here.
+          bug&rsquo;s ID and the status it had at creation time. ICore&rsquo;s Automation API is
+          write-only (it accepts new bugs but has no endpoint to read them back), so status,
+          assignment, and comments can change in ICore without this page ever knowing — use
+          &ldquo;View in ICore&rdquo; below for the current, authoritative state.
         </p>
         {!configured && (
           <p className="mt-2 text-xs text-warning">
@@ -52,21 +54,28 @@ export default async function BugTrackerPage() {
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs">{bug.external_bug_id}</span>
                 {bug.cached_status && (
-                  <span className="rounded border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
-                    {bug.cached_status}
+                  <span
+                    title="Status at creation time — ICore's API can't report changes back"
+                    className="rounded border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted"
+                  >
+                    {bug.cached_status} at creation
                   </span>
                 )}
               </div>
               {analysis && <h3 className="mt-2 text-sm font-semibold">{analysis.summary}</h3>}
-              {bug.external_bug_url && (
+              {bug.external_bug_url ? (
                 <a
                   href={bug.external_bug_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-1 block text-xs text-accent hover:underline"
+                  className="mt-1 block text-xs font-medium text-accent hover:underline"
                 >
-                  View in ICore →
+                  View current status in ICore →
                 </a>
+              ) : (
+                <p className="mt-1 text-[11px] text-muted">
+                  No link returned by ICore for this bug.
+                </p>
               )}
             </div>
           );

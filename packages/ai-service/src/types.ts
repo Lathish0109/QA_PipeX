@@ -1,6 +1,7 @@
 import type {
   BugPayload,
   FailureAnalysis,
+  PageElementSnapshot,
   TestCase,
   TestResult,
 } from '@qapipex/shared-types';
@@ -20,6 +21,10 @@ export interface GenerateTestCasesInput {
    * never the credential values themselves. Lets the AI emit a `login` step
    * referencing one by name when the requirement implies an authenticated flow. */
   availableCredentialLabels?: string[];
+  /** Interactive elements captured from the live target page (worker's /snapshot
+   * endpoint), so generated steps can reference real selectors instead of guessing
+   * ones that may not exist. Omitted if the snapshot capture failed or wasn't run. */
+  pageSnapshot?: PageElementSnapshot[];
 }
 
 export interface AnalyzeFailureInput {

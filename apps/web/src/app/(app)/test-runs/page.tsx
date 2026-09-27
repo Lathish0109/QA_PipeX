@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { reconcileStaleRuns } from '@/lib/reconcile';
 import { TriggerRunForm } from './trigger-run-form';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -13,6 +14,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default async function TestRunsPage() {
   const supabase = await createClient();
+  await reconcileStaleRuns(supabase);
 
   const { data: projects } = await supabase.from('projects').select('id, name');
   const { data: runs } = await supabase

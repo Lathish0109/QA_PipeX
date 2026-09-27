@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { reconcileStaleRuns } from '@/lib/reconcile';
 
 const STATUS_STYLES: Record<string, string> = {
   queued: 'text-muted border-border',
@@ -24,6 +25,7 @@ export default async function TestHistoryPage({
 }) {
   const { project: projectFilter, status: statusFilter } = await searchParams;
   const supabase = await createClient();
+  await reconcileStaleRuns(supabase);
 
   const { data: projects } = await supabase.from('projects').select('id, name').order('name');
 

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { signEvidenceUrl } from '@/lib/evidence';
+import { reconcileStaleRuns } from '@/lib/reconcile';
 import { AnalyzeFailureButton } from './analyze-failure-button';
 
 const CONFIDENCE_STYLES: Record<string, string> = {
@@ -27,6 +28,7 @@ export default async function TestRunDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  await reconcileStaleRuns(supabase);
 
   const { data: testRun } = await supabase.from('test_runs').select('*').eq('id', id).single();
   if (!testRun) {
@@ -213,11 +215,15 @@ export default async function TestRunDetailPage({
                         href={bugRefByAnalysisId.get(r.analysis.id)!.external_bug_url!}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-2 text-accent hover:underline"
+                        className="ml-2 font-medium text-accent hover:underline"
                       >
-                        View →
+                        View current status in ICore →
                       </a>
                     )}
+                    <p className="mt-1 text-[10px] text-muted">
+                      ICore&rsquo;s API can&rsquo;t report status changes back — this row only
+                      confirms the bug was created, not its current state.
+                    </p>
                   </div>
                 ) : (
                   <p className="mt-3 text-[11px] text-muted">

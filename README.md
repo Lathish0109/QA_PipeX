@@ -170,3 +170,31 @@ set) — nothing else to do there.
   key, one extra unused key ("QAPipeX Automation," created before the final "QAPipeX
   Final") was left in an Active state on ICore's Settings → Automation API page — harmless
   (nobody has its value), but worth revoking there if you want a tidy key list.
+
+### Architectural gaps closed after the initial verification pass
+
+Five gaps found by reviewing the working pipeline end-to-end, now fixed:
+
+1. **Duplicate bug protection** (`apps/web/src/lib/pipeline.ts`) — before creating a new
+   ICore bug, `syncBugForAnalysis` now checks (via test_case → test_results →
+   failure_analyses → bug_references) whether this test case already has a bug filed for
+   any prior run, and links the new failure to that same bug instead of re-filing.
+2. **AI selectors are now grounded in the real page** — the worker exposes a
+   `POST /snapshot` endpoint (`apps/worker/src/runner.ts`'s `capturePageSnapshot`) that
+   extracts every interactive element's tag/type/best-effort selector from the live target
+   site. `generate-test-cases` calls it (best-effort — falls back to guessing if the worker
+   is unreachable) and feeds the result into the AI prompt (`packages/ai-service`'s
+   `buildTestCasesUserPrompt`), which is instructed to only use those exact selectors.
+3. **Bug sync status honesty** — ICore's Automation API is confirmed write-only (no GET
+   endpoint exists), so the Bug Tracker page and Test Run detail page no longer imply live
+   status tracking; `cached_status` is now labeled "at creation" and the ICore link is
+   called out as the actual source of truth.
+4. **Non-blocking execution + stale-run recovery** — `POST /api/test-runs` returns as soon
+   as the worker responds, then runs AI failure-analysis + bug sync in the background using
+   a service-role Supabase client (`runFailureAnalysisPipelineInBackground`), since
+   request-scoped cookies can't outlive the response. Separately, `apps/web/src/lib/reconcile.ts`
+   lazily flips any `test_runs` row stuck in `running` for >3 minutes to `error` (checked on
+   every page that lists or shows runs), covering a worker crash or server restart mid-run.
+5. **Test case versioning** — regenerating test cases for a requirement now deletes the
+   prior `draft`-status rows before inserting the new ones, so drafts don't pile up forever;
+   `approved`/`rejected` rows (human decisions) are never touched.

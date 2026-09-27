@@ -2,11 +2,18 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { TestStep, WorkerRunRequest, WorkerRunResponse, WorkerTestCaseResult } from '@qapipex/shared-types';
+import type {
+  PageElementSnapshot,
+  TestStep,
+  WorkerRunRequest,
+  WorkerRunResponse,
+  WorkerTestCaseResult,
+} from '@qapipex/shared-types';
 import { uploadEvidence } from './supabase.js';
 import { getCredential } from './credentials.js';
 
 const STEP_TIMEOUT_MS = 10_000;
+const SNAPSHOT_MAX_ELEMENTS = 80;
 
 // Best-effort selector fallbacks for a generic login form — sites vary, and
 // AI-generated test steps reference a credential by label, not a selector,
@@ -212,6 +219,57 @@ async function executeTestCase(
       tracePath,
       consoleLogPath,
     };
+  }
+}
+
+/**
+ * Extracts a best-effort selector + label for every interactive element on the
+ * target page, so the AI test generator can reference real selectors instead
+ * of guessing them from the requirement text alone.
+ */
+export async function capturePageSnapshot(baseUrl: string): Promise<PageElementSnapshot[]> {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.goto(baseUrl, { timeout: STEP_TIMEOUT_MS });
+    // Written as a single self-contained expression (no nested named function
+    // declarations) — tsx/esbuild otherwise injects a `__name` helper call for
+    // stack-trace-name preservation, which breaks once Playwright serializes
+    // this callback's source to run standalone inside the page.
+    const elements = await page.evaluate((maxElements) => {
+      const nodes = Array.from(
+        document.querySelectorAll('input, button, select, textarea, a[href]'),
+      ).slice(0, maxElements);
+
+      return nodes.map((el) => {
+        const name = el.getAttribute('name');
+        const testId = el.getAttribute('data-testid');
+        const type = el.getAttribute('type');
+        const selector = el.id
+          ? `#${el.id}`
+          : name
+            ? `${el.tagName.toLowerCase()}[name="${name}"]`
+            : testId
+              ? `[data-testid="${testId}"]`
+              : type
+                ? `${el.tagName.toLowerCase()}[type="${type}"]`
+                : el.tagName.toLowerCase();
+
+        return {
+          tag: el.tagName.toLowerCase(),
+          type: type ?? undefined,
+          selector,
+          id: el.id || undefined,
+          name: name ?? undefined,
+          placeholder: el.getAttribute('placeholder') ?? undefined,
+          text: el.textContent?.trim().slice(0, 60) || undefined,
+        };
+      });
+    }, SNAPSHOT_MAX_ELEMENTS);
+    await page.close();
+    return elements;
+  } finally {
+    await browser.close();
   }
 }
 
