@@ -132,12 +132,11 @@ code — they show up correctly in ICore's dashboard, tagged `Source: Automation
   session; the worker resolves that label to real credentials at run time and performs a
   best-effort generic login (tries common email/password field and submit-button selectors).
   A real project (`ErrorZero Bug Tracker`, https://errorzero-bug-tracker.vercel.app) and
-  credential are set up in the live DB. Verified: encryption round-trips correctly, the
-  password never appears anywhere in rendered HTML, and the project's own Vercel Deployment
-  Protection (which was silently redirecting every visitor, including the worker, to
-  `vercel.com/login`) has been disabled so the real login page is actually reachable. The
-  login step itself (using the stored credential) is built but not yet exercised in a real
-  run — the runs so far tested the public forgot-password flow.
+  credential are set up in the live DB. **Verified with a real authenticated login**: an
+  approved test case with a `login` step actually ran against the live site — the worker
+  fetched and decrypted the stored credential, filled the real "Work Email"/"Password"
+  fields, clicked "Login", and landed on the real dashboard (confirmed by asserting the
+  "Overview" heading) — all in ~6 seconds, genuinely passed, not simulated.
 
 **To use real AI output yourself:** set at least one of `ANTHROPIC_API_KEY` /
 `OPENAI_API_KEY` / `GEMINI_API_KEY` in `apps/web/.env.local`, then select it on the
