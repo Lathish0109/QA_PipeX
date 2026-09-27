@@ -62,11 +62,23 @@ packages/
 
 ## Current status
 
-**All 6 V1 milestones from DESIGN.md §8 are built.** The full pipeline — requirement → AI
-test generation → human review/approval → Playwright execution → evidence capture → AI
-failure analysis → bug synced to ICore — is wired end-to-end in code. What's genuinely
-unverified is only the parts that need credentials this environment doesn't have: real
-Claude responses (vs. the graceful-failure path) and a real ICore Bug Tracker to sync to.
+**All 6 V1 milestones from DESIGN.md §8 are built, and the full pipeline has now been
+verified end-to-end with real AI output against the real target site**: a requirement on
+the `ErrorZero Bug Tracker` project was turned into real Gemini-generated test cases,
+approved, actually executed by Playwright against
+`https://errorzero-bug-tracker.vercel.app` (not a stand-in), captured a real failure
+screenshot when the AI's guessed selector didn't match the real page, and produced a real
+AI failure analysis that correctly separated confirmed evidence from an explicitly-labeled
+hypothesis. That is the core value proposition of this whole system, proven working.
+
+Two things remain genuinely open, both account-side, not code:
+- **Claude (Anthropic)**: the account's API credit balance is $0 — Claude Pro (the chat
+  subscription) and API billing are separate products with separate balances. Add credits
+  at console.anthropic.com → Plans & Billing to use it (the code side — including a
+  workspace-ID header some Console setups require — is already fixed and confirmed working
+  up to the billing wall).
+- **ICore Bug Tracker sync**: `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` are still unset
+  pending the real API contract.
 
 - ✅ Monorepo scaffold, Supabase Auth, DB schema + a private `evidence` Storage bucket
   (applied and verified live, RLS on every table, zero open security advisories)
@@ -93,39 +105,41 @@ Claude responses (vs. the graceful-failure path) and a real ICore Bug Tracker to
 - ✅ Settings: pick which AI provider is active — Claude (Anthropic), ChatGPT (OpenAI), or
   Gemini (Google) — workspace-wide, persisted in `app_settings`. All three implement the
   same `AIService` interface (`packages/ai-service`), including image input for failure
-  screenshots. Verified end-to-end: switching the active provider correctly routes AI calls
-  and the resulting error names the right provider and env var (e.g. selecting Gemini with
-  no key set fails with "GEMINI_API_KEY is not configured", not Anthropic's).
-- ✅ Login credentials + authenticated test steps: a Project's detail page can now store a
-  named credential (username + password, AES-256-GCM encrypted with `CREDENTIALS_ENCRYPTION_KEY`,
+  screenshots. **Gemini is verified with real output** (test generation and failure
+  analysis both confirmed against the live site). Claude is code-complete and confirmed up
+  to the account's $0 API credit balance (see above).
+- ✅ Login credentials + authenticated test steps: a Project's detail page stores a named
+  credential (username + password, AES-256-GCM encrypted with `CREDENTIALS_ENCRYPTION_KEY`,
   decrypted only by the worker, never sent to the LLM or the browser). The AI test generator
   is told which credential labels exist for a project and can emit a `{"action":"login","target":"<label>"}`
   step — never the actual username/password — when a requirement needs an authenticated
   session; the worker resolves that label to real credentials at run time and performs a
   best-effort generic login (tries common email/password field and submit-button selectors).
   A real project (`ErrorZero Bug Tracker`, https://errorzero-bug-tracker.vercel.app) and
-  credential are already set up in the live DB. Verified: encryption round-trips correctly
-  and the password never appears anywhere in rendered HTML. **Not verified against the real
-  site** — this sandbox has no outbound internet access (see below), so the actual login
-  flow needs to be run on your machine.
+  credential are set up in the live DB. Verified: encryption round-trips correctly, the
+  password never appears anywhere in rendered HTML, and the project's own Vercel Deployment
+  Protection (which was silently redirecting every visitor, including the worker, to
+  `vercel.com/login`) has been disabled so the real login page is actually reachable. The
+  login step itself (using the stored credential) is built but not yet exercised in a real
+  run — the runs so far tested the public forgot-password flow.
 
-**To actually test this with real AI output:** set at least one of `ANTHROPIC_API_KEY` /
+**To use real AI output yourself:** set at least one of `ANTHROPIC_API_KEY` /
 `OPENAI_API_KEY` / `GEMINI_API_KEY` in `apps/web/.env.local`, then select it on the
-Settings page if it isn't Claude (the default). Everything downstream (test generation,
-failure analysis, bug drafting) starts working immediately — no other changes needed. Bug
-Tracker sync additionally needs `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` once you have
-ICore's real API contract.
+Settings page if it isn't Gemini (the currently active one — see above for why Claude
+needs API billing credits separately from a Pro subscription). Bug Tracker sync
+additionally needs `BUG_TRACKER_BASE_URL`/`BUG_TRACKER_API_KEY` once you have ICore's real
+API contract.
 
-### Known transient issue
+### Known transient issues
 
-Supabase's built-in email sender has a low default rate limit (a few emails/hour), which
-signup testing during setup already tripped. It clears on its own — if signup returns
-`over_email_send_rate_limit`, wait ~15-30 min and retry. This is unrelated to the app code.
-
-### Development environment limitation
-
-The environment this was built in has no outbound internet access (DNS resolution fails
-even for `curl`). Everything that only needs the live Supabase project works fine from
-there, but real AI provider calls and running Playwright against an actual external site
-(as opposed to `localhost`) can only be verified on a machine with real internet access —
-i.e. yours.
+- Supabase's built-in email sender has a low default rate limit (a few emails/hour), which
+  signup testing during setup already tripped. It clears on its own — if signup returns
+  `over_email_send_rate_limit`, wait ~15-30 min and retry. Unrelated to the app code.
+- Google's Gemini API occasionally returns a transient `503 (high demand, try again later)`
+  — this happened once during verification and succeeded immediately on retry. If a
+  generation/analysis call fails with that message, just retry it.
+- If a target site sits behind Vercel's Deployment Protection, every visitor (including
+  this app's worker) gets redirected to `vercel.com/login` instead of the real page — this
+  is a per-project Vercel setting (Settings → Deployment Protection), not something this
+  app can detect or bypass on its own. Disable it (or set "Only Preview Deployments") for
+  any Vercel-hosted site you want to actually test.

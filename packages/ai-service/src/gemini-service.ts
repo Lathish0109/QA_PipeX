@@ -69,7 +69,7 @@ export class GeminiAIService implements AIService {
       throw new Error('GEMINI_API_KEY must be set (server-side only).');
     }
     this.client = new GoogleGenerativeAI(apiKey);
-    this.model = options?.model ?? 'gemini-2.0-flash';
+    this.model = options?.model ?? 'gemini-3.8-flash';
   }
 
   private getModel(toolName: string, description: string, schema: unknown, systemInstruction: string) {

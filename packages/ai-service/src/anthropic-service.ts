@@ -39,12 +39,18 @@ export class AnthropicAIService implements AIService {
   private client: Anthropic;
   private model: string;
 
-  constructor(options?: { apiKey?: string; model?: string }) {
+  constructor(options?: { apiKey?: string; model?: string; workspaceId?: string }) {
     const apiKey = options?.apiKey ?? process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY must be set (server-side only).');
     }
-    this.client = new Anthropic({ apiKey });
+    // Some Console setups issue API keys that aren't bound to a default
+    // workspace — Anthropic then requires this header on every request.
+    const workspaceId = options?.workspaceId ?? process.env.ANTHROPIC_WORKSPACE_ID;
+    this.client = new Anthropic({
+      apiKey,
+      defaultHeaders: workspaceId ? { 'anthropic-workspace-id': workspaceId } : undefined,
+    });
     this.model = options?.model ?? 'claude-sonnet-5';
   }
 
