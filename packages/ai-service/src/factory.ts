@@ -22,15 +22,16 @@ export function isProviderConfigured(provider: AIProvider): boolean {
   return Boolean(process.env[AI_PROVIDER_ENV_VAR[provider]]);
 }
 
-/** Creates the AIService implementation for the given provider. Throws the same
- * clear "must be set" error each implementation already throws if its key is missing. */
-export function createAIService(provider: AIProvider): AIService {
+/** Creates the AIService implementation for the given provider. `apiKey`, when given,
+ * overrides the provider's env var (e.g. a key saved from the Settings page). Throws the
+ * same clear "must be set" error each implementation already throws if no key is found. */
+export function createAIService(provider: AIProvider, apiKey?: string): AIService {
   switch (provider) {
     case 'anthropic':
-      return new AnthropicAIService();
+      return new AnthropicAIService({ apiKey });
     case 'openai':
-      return new OpenAIAIService();
+      return new OpenAIAIService({ apiKey });
     case 'gemini':
-      return new GeminiAIService();
+      return new GeminiAIService({ apiKey });
   }
 }

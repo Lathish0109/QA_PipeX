@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveAIService, getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@qapipex/ai-service';
+import { getActiveAIService, getActiveProvider, isProviderConfiguredAnywhere } from '@/lib/ai-provider';
+import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS } from '@qapipex/ai-service';
 import type { Json } from '@qapipex/db';
 import type { PageElementSnapshot, WorkerSnapshotResponse } from '@qapipex/shared-types';
 
@@ -67,7 +67,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     .eq('project_id', project.id);
 
   const provider = await getActiveProvider(supabase);
-  if (!isProviderConfigured(provider)) {
+  if (!(await isProviderConfiguredAnywhere(supabase, provider))) {
     return NextResponse.json(
       {
         error: `${AI_PROVIDER_LABELS[provider]} is selected in Settings, but ${AI_PROVIDER_ENV_VAR[provider]} is not configured on the server yet.`,

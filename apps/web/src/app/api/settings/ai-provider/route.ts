@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDERS, isProviderConfigured, type AIProvider } from '@qapipex/ai-service';
+import { getActiveProvider, isProviderConfiguredAnywhere } from '@/lib/ai-provider';
+import { AI_PROVIDERS, type AIProvider } from '@qapipex/ai-service';
 
 export async function GET() {
   const supabase = await createClient();
   const active = await getActiveProvider(supabase);
   const availability = Object.fromEntries(
-    AI_PROVIDERS.map((p) => [p, isProviderConfigured(p)]),
+    await Promise.all(AI_PROVIDERS.map(async (p) => [p, await isProviderConfiguredAnywhere(supabase, p)])),
   ) as Record<AIProvider, boolean>;
 
   return NextResponse.json({ active, availability });

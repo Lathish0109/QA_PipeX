@@ -237,6 +237,21 @@ export interface Database {
         Update: Partial<{ value: Json; updated_by: string | null }>;
         Relationships: [];
       };
+      ai_provider_keys: {
+        Row: {
+          provider: 'anthropic' | 'openai' | 'gemini';
+          encrypted_key: string;
+          updated_by: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          provider: 'anthropic' | 'openai' | 'gemini';
+          encrypted_key: string;
+          updated_by?: string | null;
+        };
+        Update: Partial<{ encrypted_key: string; updated_by: string | null }>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

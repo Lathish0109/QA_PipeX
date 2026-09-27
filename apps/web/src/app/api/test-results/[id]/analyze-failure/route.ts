@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runFailureAnalysis, syncBugForAnalysis } from '@/lib/pipeline';
-import { getActiveProvider } from '@/lib/ai-provider';
-import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS, isProviderConfigured } from '@qapipex/ai-service';
+import { getActiveProvider, isProviderConfiguredAnywhere } from '@/lib/ai-provider';
+import { AI_PROVIDER_ENV_VAR, AI_PROVIDER_LABELS } from '@qapipex/ai-service';
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,7 +29,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const analysis = await runFailureAnalysis(supabase, testResult);
   if (!analysis) {
     const provider = await getActiveProvider(supabase);
-    const hint = isProviderConfigured(provider)
+    const hint = (await isProviderConfiguredAnywhere(supabase, provider))
       ? `${AI_PROVIDER_LABELS[provider]} is configured but the call failed — check the server logs for the real error (e.g. billing/rate limits).`
       : `${AI_PROVIDER_LABELS[provider]} is selected in Settings, but ${AI_PROVIDER_ENV_VAR[provider]} is not configured on the server yet.`;
     return NextResponse.json({ error: `Analysis failed — ${hint}` }, { status: 503 });

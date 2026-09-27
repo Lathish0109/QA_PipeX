@@ -1,0 +1,25 @@
+# Fly.io config for the QAPipeX Playwright worker.
+# App name is a placeholder — `fly launch` will prompt to change it if taken.
+app = "qapipex-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Docker build must run with the repo root as context (not apps/worker), so
+# the Dockerfile can COPY sibling workspace packages. From the repo root, run:
+#   fly deploy --config apps/worker/fly.toml .
+# (the trailing "." sets the build context to the repo root; --config points
+# at this file even though it lives outside that context root)
+
+[http_service]
+  internal_port = 4088
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
